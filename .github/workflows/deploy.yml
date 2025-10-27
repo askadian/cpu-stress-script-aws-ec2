@@ -1,0 +1,30 @@
+name: Deploy to Ubuntu Server
+
+on:
+  push:
+    branches:
+      - main  # or whichever branch you want to trigger deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Stop existing script (if running)
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "pkill -f cpu_stress.py || true"
+
+    - name: Deploy updated script
+      run: |
+        scp -i ~/.ssh/id_rsa cpu_stress.py ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/home/cibot/cpu_stress.py
+        ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "nohup python3 /home/cibot/cpu_stress.py > cpu_stress.log 2>&1 &"
