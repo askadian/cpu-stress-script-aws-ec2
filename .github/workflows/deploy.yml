@@ -26,7 +26,7 @@ jobs:
 
     - name: Deploy updated script
       run: |
-        scp -i ~/.ssh/id_rsa cpu_stress.py ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/home/cibot/cpu_stress.py
+        scp -i ~/.ssh/id_rsa cpu-stress-script.py ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/home/cibot/cpu_stress.py
 
     - name: Restart systemd service
       run: |
