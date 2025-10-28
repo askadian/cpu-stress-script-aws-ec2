@@ -1,0 +1,59 @@
+resources:
+  CpuStressInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref AmiId
+      KeyName: !Ref KeyPairName
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y python3
+          aws s3 cp s3://${ArtifactBucket}/cpu-stress-script.py /home/ec2-user/cpu-stress-script.py
+          python3 /home/ec2-user/cpu-stress-script.py
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH and HTTP access
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2Role
+
+parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    Description: EC2 instance type
+  AmiId:
+    Type: String
+    Description: AMI ID for the EC2 instance
+  KeyPairName:
+    Type: String
+    Description: Name of an existing EC2 KeyPair
+  ArtifactBucket:
+    Type: String
+    Description: S3 bucket name where the CPU stress script is stored
+  VpcId:
+    Type: String
+    Description: VPC ID where the EC2 instance will be launched
+  EC2Role:
+    Type: String
+    Description: IAM Role for the EC2 instance to access AWS services

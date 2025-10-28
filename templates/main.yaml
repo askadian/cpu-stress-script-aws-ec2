@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for deploying CPU Stress Script on EC2
+
+Resources:
+  CpuStressIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CpuStressPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  CpuStressInstance:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://s3.amazonaws.com/${S3BucketName}/ec2-instance.yaml'
+      Parameters:
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        IamRole: !GetAtt CpuStressIAMRole.Arn
+
+Outputs:
+  InstanceId:
+    Description: The Instance ID of the CPU Stress EC2 instance
+    Value: !GetAtt CpuStressInstance.Outputs.InstanceId
+
+  IamRoleArn:
+    Description: The ARN of the IAM role for the CPU Stress EC2 instance
+    Value: !GetAtt CpuStressIAMRole.Arn

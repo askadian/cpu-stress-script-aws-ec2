@@ -1,0 +1,7 @@
+{
+  "InstanceType": "t2.micro",
+  "KeyName": "your-key-pair-name",
+  "AMI": "ami-0abcdef1234567890",
+  "SecurityGroup": "your-security-group-id",
+  "IAMRole": "your-iam-role-name"
+}
